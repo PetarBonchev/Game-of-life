@@ -200,13 +200,23 @@ void deleteBoard(bool** board, const size_t rows)
 	delete[] board;
 }
 
-void copyRow(bool* rowTo, const size_t sizeTo, bool* rowFrom, const size_t sizeFrom, unsigned fromPosition)
+void copyRow(bool* rowTo, const size_t sizeTo, bool* rowFrom, const size_t sizeFrom, unsigned pasteFromPosition)
 {
-	if (fromPosition + sizeFrom > sizeTo) return;
+	if (pasteFromPosition + sizeFrom > sizeTo) return;
 
 	for (int i = 0;i < sizeFrom;i++)
 	{
-		rowTo[fromPosition + i] = rowFrom[i];
+		rowTo[pasteFromPosition + i] = rowFrom[i];
+	}
+}
+
+void copyPartOfRow(bool* rowTo, const size_t toSize,bool* rowFrom,const size_t fromSize,const unsigned start,const unsigned end)
+{
+	if (end >= fromSize || fromSize - start - end > toSize) return;
+
+	for (int i = 0;i < fromSize - start - end;i++)
+	{
+		rowTo[i] = rowFrom[i + start];
 	}
 }
 
@@ -232,16 +242,50 @@ bool expandBoard(bool**& board, size_t& rows, size_t& cols, const size_t addRows
 
 bool shrinkBoard(bool**& board, size_t& rows, size_t& cols, const size_t removeRowsBeg, const size_t removeRowsEnd, const size_t removeColsBeg, const size_t removeColsEnd)
 {
+
 	if (rows - removeRowsBeg - removeRowsEnd < 2 || cols - removeColsBeg - removeColsEnd < 2) return false;
 
 	bool** newBoard = createEmptyBoard(rows - removeRowsBeg - removeRowsEnd, cols - removeColsBeg - removeColsEnd);
 
-	for (unsigned i = removeRowsBeg;i < rows - removeRowsEnd;i++)
+	for (unsigned i = 0;i < rows - removeRowsBeg - removeRowsEnd;i++)
 	{
-		
+		copyPartOfRow(newBoard[i], cols - removeColsBeg - removeColsEnd, board[i + removeRowsBeg], cols, removeColsBeg, removeColsEnd);
 	}
 
+	deleteBoard(board, rows);
+
+	board = newBoard;
+	rows = rows - removeRowsBeg - removeRowsEnd;
+	cols = cols - removeColsBeg - removeColsEnd;
+
 	return true;
+}
+
+bool resizeBoard(bool**& board, size_t& rows, size_t& cols, const size_t newSizeRows, const size_t newSizeCols)
+{
+	if (newSizeRows > MAX_ROWS || newSizeCols > MAX_COLS || newSizeCols < 2 || newSizeRows < 2) return false;
+
+	if (rows < newSizeRows) expandBoard(board, rows, cols, 0, newSizeRows - rows, 0, 0);
+	else if (rows > newSizeRows) shrinkBoard(board, rows, cols, 0, rows - newSizeRows, 0, 0);
+
+	if (cols < newSizeCols) expandBoard(board, rows, cols, 0, 0, 0, newSizeCols - cols);
+	else if (cols > newSizeCols) shrinkBoard(board, rows, cols, 0, 0, 0, cols - newSizeCols);
+
+	return true;
+}
+
+void setSizeBoard(bool**& board, size_t& rows, size_t& cols)
+{
+	const int MAX_INT = 2147483647;
+
+	int inputX = 0, inputY = 0;
+	cout << "X> ";
+	inputX = inputNatural(MAX_INT);
+	cout << "Y> ";
+	inputY = inputNatural(MAX_INT);
+	cout << endl;
+
+	resizeBoard(board, rows, cols, inputX, inputY);
 }
 
 void toggleCell(bool** board, size_t rows, size_t cols)
@@ -277,7 +321,7 @@ void runGameLoop(bool** board, size_t rows, size_t cols)
 		switch (input)
 		{
 		case 1: break;
-		case 2: break;
+		case 2: setSizeBoard(board, rows, cols); break;
 		case 3: toggleCell(board, rows, cols); break;
 		case 4: break;
 		case 5: break;
@@ -300,6 +344,16 @@ void newGame()
 
 void start()
 {
+	/*size_t x = 8, y = 16;
+	bool** board = createEmptyBoard(8, 16);
+	toggleCell(board, x, y);
+	toggleCell(board, x, y);
+	printGameBoard(board, x, y);
+	expandBoard(board, x, y, 3, 5, 5, 3);
+	printGameBoard(board, x, y);
+	shrinkBoard(board, x, y, 3, 5, 5, 3);
+	printGameBoard(board, x, y);*/
+
 	while (true)
 	{
 		printStartMenu();
