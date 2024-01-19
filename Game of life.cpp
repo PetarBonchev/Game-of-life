@@ -1,10 +1,30 @@
 #include <iostream>
+#include <cstdlib>
+
+/*
+	step forward
+		-kod
+		-proverka za resize
+	resize
+		-izpishi tekusht razmer, pitai za nov
+	randomize
+		-N - veroqtnost kletka da e jiva
+			-input double
+			-calculate double probability
+	save
+		-clear empty rows/columns
+		-dobavi v faila s imena ako go nqma
+		-zapishi infoto
+	load file
+		-fail s imena na failove, zaredi ako ima
+*/
 
 using namespace std;
 
 constexpr size_t MAX_ROWS = 24;
 constexpr size_t MAX_COLS = 80;
 
+//ok
 unsigned countDigits(int x)
 {
 	if (x == 0) return 1;
@@ -18,29 +38,29 @@ unsigned countDigits(int x)
 
 	return ans;
 }
-
+//ok
 unsigned myStrlen(const char* str)
 {
 	if (!str)
 		return 0;
 
 	unsigned result = 0;
-	while (*str) //is the same as (*str) != '\0'
+	while (*str)
 	{
 		result++;
 		str++;
 	}
 	return result;
 }
-
-int convertCharToDigit(char ch)
+//ok
+int convertCharToDigit(const char ch)
 {
 	if (ch >= '0' && ch <= '9')
 		return ch - '0';
 	return -1;
 }
-
-unsigned convertStrToUnsigned(const char* str)
+//ok
+int convertStrToUnsigned(const char* str)
 {
 	if (!str)
 		return 0;
@@ -50,83 +70,105 @@ unsigned convertStrToUnsigned(const char* str)
 	{
 		int digit = convertCharToDigit(*str);
 		if (digit == -1)
-			return 0;
+			return -1;
 		(result *= 10) += digit;
 		str++;
 	}
 	return result;
 }
-
+//ok
 void printSymbols(const unsigned size, const char symbol)
 {
 	for (unsigned i = 0; i < size; i++)
 		cout << symbol;
 }
-
+//ok
 void printStartMenu()
 {
-	constexpr unsigned lineLength = 65;
-	const char lineSymbol = '-';
+	constexpr unsigned lineLength = 64;
 
-	cout << endl << endl;
-	cout << "\t\t\t";
-	printSymbols(16, lineSymbol);
+	printSymbols(2, '\n');
+	printSymbols(24, ' ');
+	printSymbols(16, '-');
 	cout << endl;
-	cout << "\t\t\t| GAME OF LIFE |\n";
-	cout << "\t\t\t";
-	printSymbols(16, lineSymbol);
+	printSymbols(24, ' ');
+	cout << "| GAME OF LIFE |\n";
+	printSymbols(24, ' ');
+	printSymbols(16, '-');
+	printSymbols(2, '\n');
+
+	printSymbols(lineLength, '-');
 	cout << endl;
+	cout << "|";
+	printSymbols(29, ' ');
+	cout<<"MENU";
+	printSymbols(29, ' ');
+	cout << "|\n";
+	printSymbols(lineLength, '-');
 	cout << endl;
 
-	printSymbols(lineLength, lineSymbol);
-	cout << endl;
-	cout << "|\t\t\t   MAIN MENU\t\t\t\t|\n";
-	printSymbols(lineLength, lineSymbol);
-	cout << endl;
 
-
-	cout << "| 1 |   New game\t\t\t\t\t\t|\n";
-	printSymbols(lineLength, lineSymbol);
+	cout << "| 1 |   New game";
+	printSymbols(47, ' ');
+	cout << "|\n";
+	printSymbols(lineLength, '-');
 	cout << endl;
-	cout << "| 2 |   Load file\t\t\t\t\t\t|\n";
-	printSymbols(lineLength, lineSymbol);
+	cout << "| 2 |   Load file";
+	printSymbols(46, ' ');
+	cout << "|\n";
+	printSymbols(lineLength, '-');
 	cout << endl;
-	cout << "| 3 |   Exit\t\t\t\t\t\t\t|\n";
-	printSymbols(lineLength, lineSymbol);
+	cout << "| 3 |   Exit";
+	printSymbols(51, ' ');
+	cout << "|\n";
+	printSymbols(lineLength, '-');
 	cout << endl;
 
 	cout << endl << endl;
 }
-
+//ok
 void printOptionsInGame()
 {
 	constexpr unsigned lineLength = 65;
-	const char lineSymbol = '-';
 
-	cout << endl << endl;
-	printSymbols(lineLength, lineSymbol);
-	cout << endl;
-	cout << "|\t\t\t     OPTIONS\t\t\t\t|\n";
-	printSymbols(lineLength, lineSymbol);
+	printSymbols(2, '\n');
+	printSymbols(lineLength, '-');
+	cout << "\n|";
+	printSymbols(28, ' ');
+	cout << "OPTIONS";
+	printSymbols(28, ' ');
+	cout << "|\n";
+	printSymbols(lineLength, '-');
 	cout << endl;
 
-	cout << "| 1 |   Step forward\t\t";
-	cout << "| 2 |   Resize\t\t\t|\n";
-	printSymbols(lineLength, lineSymbol);
+	cout << "| 1 |   Step forward";
+	printSymbols(12, ' ');
+	cout << "| 2 |   Resize";
+	printSymbols(18, ' ');
+	cout << "|\n";
+	printSymbols(lineLength, '-');
 	cout << endl;
-	cout << "| 3 |   Toggle cell\t\t";
-	cout << "| 4 |   Clear\t\t\t|\n";
-	printSymbols(lineLength, lineSymbol);
+	cout << "| 3 |   Toggle cell";
+	printSymbols(13, ' ');
+	cout << "| 4 |   Clear";
+	printSymbols(19, ' ');
+	cout << "|\n";
+	printSymbols(lineLength, '-');
 	cout << endl;
-	cout << "| 5 |   Randomize\t\t";
-	cout << "| 6 |   Save to file\t\t|\n";
-	printSymbols(lineLength, lineSymbol);
+	cout << "| 5 |   Randomize";
+	printSymbols(15, ' ');
+	cout << "| 6 |   Save to file";
+	printSymbols(12, ' ');
+	cout << "|\n";
+	printSymbols(lineLength, '-');
 	cout << endl;
-	cout << "| 7 |   End\t\t\t\t\t\t\t|\n";
-	printSymbols(lineLength, lineSymbol);
+	cout << "| 7 |   End";
+	printSymbols(53, ' ');
+	cout << "|\n";
+	printSymbols(lineLength, '-');
 	cout << endl;
 }
-
+//ok
 void printGameRow(const bool* row, const unsigned n)
 {
 	const char aliveSymbol = '@';
@@ -139,7 +181,7 @@ void printGameRow(const bool* row, const unsigned n)
 	}
 	cout << endl;
 }
-
+//ok
 void printGameBoard(bool** arr, const unsigned n, const unsigned m)
 {
 	unsigned offsetX = countDigits(n);
@@ -158,20 +200,88 @@ void printGameBoard(bool** arr, const unsigned n, const unsigned m)
 	}
 }
 
+//maybe inputString?
+//ok 
 int inputNatural(const unsigned maxInput)
 {
 	const unsigned MAX_SIZE = 100;
 	char input[MAX_SIZE];
 
 	cin.getline(input, MAX_SIZE);
-	unsigned len = myStrlen(input);
-	if (len > countDigits(maxInput)) 
-		return -1;
 
 	unsigned uInput = convertStrToUnsigned(input);
 	if (uInput == 0 || maxInput < uInput) return -1;
 
 	return uInput;
+}
+//ok
+int inputWholeNumber(const int minNumber, const int maxNumber, bool& valid)
+{
+	const unsigned MAX_SIZE = 100;
+	char input[MAX_SIZE];
+
+	cin.getline(input, MAX_SIZE);
+
+	bool negative = false;
+	int iInput = 0;
+	if (input[0] == '-')
+	{
+		negative = true;
+		iInput = convertStrToUnsigned(input + 1);
+	}
+	else iInput = convertStrToUnsigned(input);
+
+	if (iInput == -1 || iInput < minNumber || maxNumber < iInput)
+	{
+		valid = false;
+		return 0;
+	}
+
+	valid = true;
+
+	if (negative) iInput = -iInput;
+
+	return iInput;
+}
+//ok
+double inputPositiveDouble(const double maxNumber)
+{
+	const unsigned MAX_SIZE = 100;
+	char input[MAX_SIZE];
+
+	cin.getline(input, MAX_SIZE);
+
+	unsigned len = myStrlen(input);
+	bool pointPassed = false;
+	double res = 0;
+	double multiplyer = 1;
+
+	for (unsigned i = 0;i < len;i++)
+	{
+		int digit = convertCharToDigit(input[i]);
+		if (digit != -1)
+		{
+			if (!pointPassed)
+			{
+				res *= 10;
+				res += digit;
+			}
+			else
+			{
+				multiplyer /= 10;
+				res += multiplyer * digit;
+			}
+		}
+		else if (input[i] == '.' && !pointPassed)
+		{
+			pointPassed = true;
+		}
+		else return -1;
+	}
+
+	if (res > maxNumber) return -1;
+
+	return res;
 }
 
 void fillArray(bool* arr, const size_t size, bool value)
@@ -242,7 +352,6 @@ bool expandBoard(bool**& board, size_t& rows, size_t& cols, const size_t addRows
 
 bool shrinkBoard(bool**& board, size_t& rows, size_t& cols, const size_t removeRowsBeg, const size_t removeRowsEnd, const size_t removeColsBeg, const size_t removeColsEnd)
 {
-
 	if (rows - removeRowsBeg - removeRowsEnd < 2 || cols - removeColsBeg - removeColsEnd < 2) return false;
 
 	bool** newBoard = createEmptyBoard(rows - removeRowsBeg - removeRowsEnd, cols - removeColsBeg - removeColsEnd);
@@ -288,22 +397,113 @@ void setSizeBoard(bool**& board, size_t& rows, size_t& cols)
 	resizeBoard(board, rows, cols, inputX, inputY);
 }
 
-void toggleCell(bool** board, size_t rows, size_t cols)
+void toggleCell(bool** &board, size_t &rows, size_t &cols)
 {
-	const int MAX_INT = 2147483647;
-
 	int inputX = 0, inputY = 0;
+	bool validX = false, validY = false;
 	cout << "X> ";
-	inputX = inputNatural(MAX_INT);
+	inputX = inputWholeNumber(rows - MAX_ROWS + 1, MAX_ROWS, validX);
 	cout << "Y> ";
-	inputY = inputNatural(MAX_INT);
+	inputY = inputWholeNumber(cols - MAX_COLS + 1, MAX_COLS, validY);
 	cout << endl;
+
+	if (!validX || !validY) return;
 
 	inputX--;
 	inputY--;
 
-	board[inputX][inputY] = !board[inputX][inputY];
+	if (inputX < 0)
+	{
+		expandBoard(board, rows, cols, -inputX, 0, 0, 0);
+		inputX = 0;
+	}
+	else if (inputX >= rows)
+		expandBoard(board, rows, cols, 0, inputX - rows + 1, 0, 0);
 
+	if (inputY < 0)
+	{
+		expandBoard(board, rows, cols, 0, 0, -inputY, 0);
+		inputY = 0;
+	}
+	else if (inputY >= cols)
+		expandBoard(board, rows, cols, 0, 0, 0, inputY - cols + 1);
+
+	board[inputX][inputY] = !board[inputX][inputY];
+}
+
+void clearBoard(bool** board, const size_t rows, const size_t cols)
+{
+	for (int i = 0;i < rows;i++)
+	{
+		fillArray(board[i], cols, false);
+	}
+}
+
+void randomizeBoolArray(bool* arr, const size_t size)
+{
+	for (unsigned i = 0;i < size;i++)
+	{
+		arr[i] = rand() % 2;
+	}
+}
+
+void randomizeBoard(bool** board, const size_t rows, const size_t cols)
+{
+	for (unsigned i = 0;i < rows;i++)
+	{
+		randomizeBoolArray(board[i], cols);
+	}
+}
+
+unsigned getAliveCountAround(bool** board, const size_t rows, const size_t cols, const unsigned i, const unsigned j)
+{
+	unsigned ans = 0;
+
+	if (i > 0)
+	{
+		ans += board[i - 1][j];
+		if (j > 0) ans += board[i - 1][j - 1];
+		if (j + 1 < cols) ans += board[i - 1][j + 1];
+	}
+
+	if (j > 0) ans += board[i][j - 1];
+	if (j + 1 < cols) ans += board[i][j + 1];
+
+	if (i + 1 < rows)
+	{
+		ans += board[i + 1][j];
+		if (j > 0) ans += board[i + 1][j - 1];
+		if (j + 1 < cols) ans += board[i + 1][j + 1];
+	}
+
+	return ans;
+}
+
+void stepForward(bool** &board, const size_t rows, const size_t cols)
+{
+	bool** newBoard = createEmptyBoard(rows, cols);
+
+	for (unsigned i = 0;i < rows;i++)
+	{
+		for (unsigned j = 0;j < cols;j++)
+		{
+			unsigned alive = getAliveCountAround(board, rows, cols, i, j);
+			if (board[i][j])
+			{
+				if (alive < 2 || 3 < alive) newBoard[i][j] = false;
+				else newBoard[i][j] = true;
+			}
+			else
+			{
+				if (alive == 3) newBoard[i][j] = true;
+				else newBoard[i][j] = false;
+			}
+		}
+	}
+
+	deleteBoard(board, rows);
+
+	board = newBoard;
 }
 
 void runGameLoop(bool** board, size_t rows, size_t cols)
@@ -320,11 +520,11 @@ void runGameLoop(bool** board, size_t rows, size_t cols)
 
 		switch (input)
 		{
-		case 1: break;
+		case 1: stepForward(board, rows, cols); break;
 		case 2: setSizeBoard(board, rows, cols); break;
 		case 3: toggleCell(board, rows, cols); break;
-		case 4: break;
-		case 5: break;
+		case 4: clearBoard(board, rows, cols); break;
+		case 5: randomizeBoard(board, rows, cols); break;
 		case 6: break;
 		case 7: return;
 			default: cout << "Invalid input\n\n\n"; break;
@@ -344,16 +544,6 @@ void newGame()
 
 void start()
 {
-	/*size_t x = 8, y = 16;
-	bool** board = createEmptyBoard(8, 16);
-	toggleCell(board, x, y);
-	toggleCell(board, x, y);
-	printGameBoard(board, x, y);
-	expandBoard(board, x, y, 3, 5, 5, 3);
-	printGameBoard(board, x, y);
-	shrinkBoard(board, x, y, 3, 5, 5, 3);
-	printGameBoard(board, x, y);*/
-
 	while (true)
 	{
 		printStartMenu();
@@ -375,5 +565,6 @@ void start()
 
 int main()
 {
+	srand(time(0));
 	start();
 }
