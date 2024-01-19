@@ -1,24 +1,13 @@
 #include <iostream>
 #include <cstdlib>
-
-/*
-	step forward
-		-kod
-		-proverka za resize
-	resize
-		-izpishi tekusht razmer, pitai za nov
-	save
-		-clear empty rows/columns
-		-dobavi v faila s imena ako go nqma
-		-zapishi infoto
-	load file
-		-fail s imena na failove, zaredi ako ima
-*/
+#include <fstream>
 
 using namespace std;
 
 constexpr size_t MAX_ROWS = 24;
 constexpr size_t MAX_COLS = 80;
+
+const char NAMES_FILE[50] = "names.txt";
 
 //ok
 unsigned countDigits(int x)
@@ -47,6 +36,22 @@ unsigned myStrlen(const char* str)
 		str++;
 	}
 	return result;
+}
+//ok
+int myStrcmp(const char* first, const char* second)
+{
+	if (!first || !second)
+		return 0; //some error value
+
+	//we skip the common prefix, but not the terminating zero!
+	while ((*first) && (*second) && ((*first) == (*second))) //acutally the (*second) check can be missed here.
+	{
+		first++;
+		second++;
+	}
+
+	return (*first - *second);
+
 }
 //ok
 double absolute(double x)
@@ -425,6 +430,26 @@ bool shrinkBoard(bool**& board, size_t& rows, size_t& cols, const size_t removeR
 	return true;
 }
 
+void removeEmptyCorners(bool** &board, size_t &rows, size_t &cols)
+{
+	while (rows > 2 && nInRow(board, rows, cols, 0, 0, 0, 1, false, cols))
+	{
+		shrinkBoard(board, rows, cols, 1, 0, 0, 0);
+	}
+	while (rows > 2 && nInRow(board, rows, cols, rows - 1, 0, 0, 1, false, cols))
+	{
+		shrinkBoard(board, rows, cols, 0, 1, 0, 0);
+	}
+	while (cols > 2 && nInRow(board, rows, cols, 0, 0, 1, 0, false, rows))
+	{
+		shrinkBoard(board, rows, cols, 0, 0, 1, 0);
+	}
+	while (cols > 2 && nInRow(board, rows, cols, 0, cols - 1, 1, 0, false, rows))
+	{
+		shrinkBoard(board, rows, cols, 0, 0, 0, 1);
+	}
+}
+
 bool resizeBoard(bool**& board, size_t& rows, size_t& cols, const size_t newSizeRows, const size_t newSizeCols)
 {
 	if (newSizeRows > MAX_ROWS || newSizeCols > MAX_COLS || newSizeCols < 2 || newSizeRows < 2) return false;
@@ -581,7 +606,79 @@ void stepForward(bool** &board, size_t &rows, size_t &cols)
 
 	deleteBoard(board, rows);
 
+	removeEmptyCorners(newBoard,rows,cols);
+
 	board = newBoard;
+}
+
+char* boolArrToString(bool* arr, const size_t size)
+{
+	char* res = new char[size + 1];
+
+	for (unsigned i = 0;i < size;i++)
+	{
+		res[i] = arr[i] ? '1' : '0';
+	}
+
+	res[size] = '\0';
+
+	return res;
+}
+
+bool existsInFileNamesFile(const char* name)
+{
+	const unsigned MAX_SIZE = 100;
+	ifstream read(NAMES_FILE);
+
+	while (read)
+	{
+		char line[MAX_SIZE];
+		read.getline(line, MAX_SIZE);
+
+		if (myStrcmp(line, name) == 0) return true;
+	}
+
+	read.close();
+
+	return false;
+}
+
+void insertInFileNamesFile(const char* name)
+{
+	if (existsInFileNamesFile(name)) return;
+
+	ofstream write(NAMES_FILE, ios::app);
+
+	write << name << endl;
+
+	write.close();
+}
+
+void saveBoard(bool** &board, size_t &rows, size_t &cols)
+{
+	const unsigned MAX_SIZE = 100;
+	char input[MAX_SIZE];
+
+	cin.getline(input, MAX_SIZE);
+
+	insertInFileNamesFile(input);
+
+	removeEmptyCorners(board, rows, cols);
+
+	ofstream write(input);
+
+	write << rows << endl << cols << endl;
+
+	for (int i = 0;i < rows;i++)
+	{
+		char* text = boolArrToString(board[i], cols);
+		write << text << endl;
+		delete[] text;
+	}
+
+	write.close();
+
+	cout << "ok\n";
 }
 
 void runGameLoop(bool** board, size_t rows, size_t cols)
@@ -604,7 +701,7 @@ void runGameLoop(bool** board, size_t rows, size_t cols)
 		case 3: toggleCell(board, rows, cols); break;
 		case 4: clearBoard(board, rows, cols); break;
 		case 5: randomizeBoard(board, rows, cols); break;
-		case 6: break;
+		case 6: saveBoard(board, rows, cols); break;
 		case 7: exit = true; break;
 			default: cout << "Invalid input\n\n\n"; break;
 		}
@@ -621,6 +718,52 @@ void newGame()
 	deleteBoard(board, rows);
 }
 
+void setBoolArrayByString(bool* arr, size_t size, char* str)
+{
+	if (!str) return;
+
+	for (unsigned i = 0;i < size;i++)
+	{
+		if (str[i] == '0') arr[i] = false;
+		else arr[i] = true;
+	}
+}
+
+bool loadBoard(bool**& board, size_t& rows, size_t& cols)
+{
+	const unsigned MAX_SIZE = 100;
+	char input[MAX_SIZE];
+
+	cin.getline(input, MAX_SIZE);
+
+	if (!existsInFileNamesFile(input)) return false;
+
+	ifstream read(input);
+	
+	read.getline(input, MAX_SIZE);
+	rows = convertStrToUnsigned(input);
+	read.getline(input, MAX_SIZE);
+	cols = convertStrToUnsigned(input);
+	board = createEmptyBoard(rows, cols);
+
+	for (int i = 0;i < rows;i++)
+	{
+		read.getline(input, MAX_SIZE);
+		setBoolArrayByString(board[i], cols, input);
+	}
+
+	return true;
+}
+
+void load()
+{
+	bool** board;
+	size_t rows, cols;
+
+	if (loadBoard(board, rows, cols))
+		runGameLoop(board, rows, cols);
+}
+
 void start()
 {
 	while (true)
@@ -634,7 +777,7 @@ void start()
 		switch (input)
 		{
 			case 1: newGame(); break;
-			case 2:break;
+			case 2: load(); break;
 			case 3:	return;
 			default: cout << "Invalid input\n"; break;
 		}
