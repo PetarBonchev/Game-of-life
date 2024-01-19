@@ -7,10 +7,6 @@
 		-proverka za resize
 	resize
 		-izpishi tekusht razmer, pitai za nov
-	randomize
-		-N - veroqtnost kletka da e jiva
-			-input double
-			-calculate double probability
 	save
 		-clear empty rows/columns
 		-dobavi v faila s imena ako go nqma
@@ -53,6 +49,12 @@ unsigned myStrlen(const char* str)
 	return result;
 }
 //ok
+double absolute(double x)
+{
+	if (x < 0)return -x;
+	return x;
+}
+//ok
 int convertCharToDigit(const char ch)
 {
 	if (ch >= '0' && ch <= '9')
@@ -75,6 +77,55 @@ int convertStrToUnsigned(const char* str)
 		str++;
 	}
 	return result;
+}
+
+void calculateChance(double prob, int& posibility, int& all)
+{
+	if (prob <= 0)
+	{
+		posibility = 0;
+		all = 1;
+		return;
+	}
+	if (prob >= 1)
+	{
+		posibility = 1;
+		all = 1;
+		return;
+	}
+
+	const int MAX = 10000;
+
+	posibility = 0;
+	all = 1;
+
+	while (all < MAX)
+	{
+		all *= 10;
+		prob *= 10;
+		int temp = (int)prob;
+		prob -= temp;
+		posibility *= 10;
+		posibility += temp;
+	}
+}
+
+bool nInRow(bool** board, size_t rows, size_t cols, int startX, int startY, int moveX, int moveY, bool value, unsigned count)
+{
+	if (startX < 0 || rows <= startX || startY < 0 || cols <= startY) return false;
+
+	int consecCount = 0;
+	while (startX >= 0 && rows > startX && startY >= 0 && cols > startY)
+	{
+		if (board[startX][startY] == value) consecCount++;
+		else consecCount = 0;
+		if (count <= consecCount) return true;
+
+		startX += moveX;
+		startY += moveY;
+	}
+
+	return false;
 }
 //ok
 void printSymbols(const unsigned size, const char symbol)
@@ -184,6 +235,8 @@ void printGameRow(const bool* row, const unsigned n)
 //ok
 void printGameBoard(bool** arr, const unsigned n, const unsigned m)
 {
+	cout << endl;
+
 	unsigned offsetX = countDigits(n);
 
 	printSymbols(offsetX + 1, ' ');
@@ -198,6 +251,8 @@ void printGameBoard(bool** arr, const unsigned n, const unsigned m)
 		else printSymbols(offsetX + 1, ' ');
 		printGameRow(arr[i], m);
 	}
+
+	cout << endl;
 }
 
 //maybe inputString?
@@ -439,19 +494,27 @@ void clearBoard(bool** board, const size_t rows, const size_t cols)
 	}
 }
 
-void randomizeBoolArray(bool* arr, const size_t size)
+void randomizeBoolArray(bool* arr, const size_t size, int prob, int one)
 {
 	for (unsigned i = 0;i < size;i++)
 	{
-		arr[i] = rand() % 2;
+		arr[i] = (rand() % one < prob);
 	}
 }
 
 void randomizeBoard(bool** board, const size_t rows, const size_t cols)
 {
+	double probability = inputPositiveDouble(1);
+
+	if (probability == -1) return;
+
+	int prob = 0, one = 1;
+
+	calculateChance(probability, prob, one);
+
 	for (unsigned i = 0;i < rows;i++)
 	{
-		randomizeBoolArray(board[i], cols);
+		randomizeBoolArray(board[i], cols, prob, one);
 	}
 }
 
@@ -479,26 +542,41 @@ unsigned getAliveCountAround(bool** board, const size_t rows, const size_t cols,
 	return ans;
 }
 
-void stepForward(bool** &board, const size_t rows, const size_t cols)
+void stepForwardRow(bool**& board, size_t rows, size_t cols, const unsigned row,bool** newBoard)
+{
+	for (unsigned j = 0;j < cols;j++)
+	{
+		unsigned alive = getAliveCountAround(board, rows, cols, row, j);
+		if (board[row][j])
+		{
+			if (alive < 2 || 3 < alive) newBoard[row][j] = false;
+			else newBoard[row][j] = true;
+		}
+		else
+		{
+			if (alive == 3) newBoard[row][j] = true;
+			else newBoard[row][j] = false;
+		}
+	}
+}
+
+void stepForward(bool** &board, size_t &rows, size_t &cols)
 {
 	bool** newBoard = createEmptyBoard(rows, cols);
+	size_t newRows = rows, newCols = cols;
+
+	unsigned addXB = nInRow(board, rows, cols, 0, 0, 0, 1, true, 3);
+	unsigned addXE = nInRow(board, rows, cols, rows - 1, 0, 0, 1, true, 3);
+	unsigned addYB = nInRow(board, rows, cols, 0, 0, 1, 0, true, 3);
+	unsigned addYE = nInRow(board, rows, cols, 0, cols - 1, 1, 0, true, 3);
+
+	expandBoard(newBoard, newRows, newCols, addXB, addXE, addYB, addYE);
+
+	expandBoard(board, rows, cols, addXB, addXE, addYB, addYE);
 
 	for (unsigned i = 0;i < rows;i++)
 	{
-		for (unsigned j = 0;j < cols;j++)
-		{
-			unsigned alive = getAliveCountAround(board, rows, cols, i, j);
-			if (board[i][j])
-			{
-				if (alive < 2 || 3 < alive) newBoard[i][j] = false;
-				else newBoard[i][j] = true;
-			}
-			else
-			{
-				if (alive == 3) newBoard[i][j] = true;
-				else newBoard[i][j] = false;
-			}
-		}
+		stepForwardRow(board, rows, cols, i, newBoard);
 	}
 
 	deleteBoard(board, rows);
@@ -508,7 +586,8 @@ void stepForward(bool** &board, const size_t rows, const size_t cols)
 
 void runGameLoop(bool** board, size_t rows, size_t cols)
 {
-	while (true)
+	bool exit = false;
+	while (!exit)
 	{
 		printGameBoard(board, rows, cols);
 
@@ -526,7 +605,7 @@ void runGameLoop(bool** board, size_t rows, size_t cols)
 		case 4: clearBoard(board, rows, cols); break;
 		case 5: randomizeBoard(board, rows, cols); break;
 		case 6: break;
-		case 7: return;
+		case 7: exit = true; break;
 			default: cout << "Invalid input\n\n\n"; break;
 		}
 	}
