@@ -9,7 +9,6 @@ constexpr size_t MAX_COLS = 80;
 
 const char NAMES_FILE[50] = "names.txt";
 
-//ok
 unsigned countDigits(int x)
 {
 	if (x == 0) return 1;
@@ -23,7 +22,7 @@ unsigned countDigits(int x)
 
 	return ans;
 }
-//ok
+
 unsigned myStrlen(const char* str)
 {
 	if (!str)
@@ -37,7 +36,7 @@ unsigned myStrlen(const char* str)
 	}
 	return result;
 }
-//ok
+
 int myStrcmp(const char* first, const char* second)
 {
 	if (!first || !second)
@@ -53,20 +52,20 @@ int myStrcmp(const char* first, const char* second)
 	return (*first - *second);
 
 }
-//ok
+
 double absolute(double x)
 {
 	if (x < 0)return -x;
 	return x;
 }
-//ok
+
 int convertCharToDigit(const char ch)
 {
 	if (ch >= '0' && ch <= '9')
 		return ch - '0';
 	return -1;
 }
-//ok
+
 int convertStrToUnsigned(const char* str)
 {
 	if (!str)
@@ -132,13 +131,13 @@ bool nInRow(bool** board, size_t rows, size_t cols, int startX, int startY, int 
 
 	return false;
 }
-//ok
+
 void printSymbols(const unsigned size, const char symbol)
 {
 	for (unsigned i = 0; i < size; i++)
 		cout << symbol;
 }
-//ok
+
 void printStartMenu()
 {
 	constexpr unsigned lineLength = 64;
@@ -182,7 +181,7 @@ void printStartMenu()
 
 	cout << endl << endl;
 }
-//ok
+
 void printOptionsInGame()
 {
 	constexpr unsigned lineLength = 65;
@@ -224,7 +223,7 @@ void printOptionsInGame()
 	printSymbols(lineLength, '-');
 	cout << endl;
 }
-//ok
+
 void printGameRow(const bool* row, const unsigned n)
 {
 	const char aliveSymbol = '@';
@@ -237,7 +236,7 @@ void printGameRow(const bool* row, const unsigned n)
 	}
 	cout << endl;
 }
-//ok
+
 void printGameBoard(bool** arr, const unsigned n, const unsigned m)
 {
 	cout << endl;
@@ -260,8 +259,6 @@ void printGameBoard(bool** arr, const unsigned n, const unsigned m)
 	cout << endl;
 }
 
-//maybe inputString?
-//ok 
 int inputNatural(const unsigned maxInput)
 {
 	const unsigned MAX_SIZE = 100;
@@ -274,7 +271,7 @@ int inputNatural(const unsigned maxInput)
 
 	return uInput;
 }
-//ok
+
 int inputWholeNumber(const int minNumber, const int maxNumber, bool& valid)
 {
 	const unsigned MAX_SIZE = 100;
@@ -303,7 +300,7 @@ int inputWholeNumber(const int minNumber, const int maxNumber, bool& valid)
 
 	return iInput;
 }
-//ok
+
 double inputPositiveDouble(const double maxNumber)
 {
 	const unsigned MAX_SIZE = 100;
@@ -465,6 +462,8 @@ bool resizeBoard(bool**& board, size_t& rows, size_t& cols, const size_t newSize
 
 void setSizeBoard(bool**& board, size_t& rows, size_t& cols)
 {
+	cout << "Current size: (" << rows << "," << cols << ")\n\n";
+
 	const int MAX_INT = 2147483647;
 
 	int inputX = 0, inputY = 0;
@@ -474,7 +473,8 @@ void setSizeBoard(bool**& board, size_t& rows, size_t& cols)
 	inputY = inputNatural(MAX_INT);
 	cout << endl;
 
-	resizeBoard(board, rows, cols, inputX, inputY);
+	if (!resizeBoard(board, rows, cols, inputX, inputY))
+		cout << "Invalid input\n\n";
 }
 
 void toggleCell(bool** &board, size_t &rows, size_t &cols)
@@ -487,7 +487,11 @@ void toggleCell(bool** &board, size_t &rows, size_t &cols)
 	inputY = inputWholeNumber(cols - MAX_COLS + 1, MAX_COLS, validY);
 	cout << endl;
 
-	if (!validX || !validY) return;
+	if (!validX || !validY)
+	{
+		cout << "Invalid input\n\n";
+		return;
+	}
 
 	inputX--;
 	inputY--;
@@ -529,9 +533,14 @@ void randomizeBoolArray(bool* arr, const size_t size, int prob, int one)
 
 void randomizeBoard(bool** board, const size_t rows, const size_t cols)
 {
+	cout << "> ";
 	double probability = inputPositiveDouble(1);
 
-	if (probability == -1) return;
+	if (probability == -1)
+	{
+		cout << "\nInvalid input\n\n";
+		return;
+	}
 
 	int prob = 0, one = 1;
 
@@ -596,7 +605,6 @@ void stepForward(bool** &board, size_t &rows, size_t &cols)
 	unsigned addYE = nInRow(board, rows, cols, 0, cols - 1, 1, 0, true, 3);
 
 	expandBoard(newBoard, newRows, newCols, addXB, addXE, addYB, addYE);
-
 	expandBoard(board, rows, cols, addXB, addXE, addYB, addYE);
 
 	for (unsigned i = 0;i < rows;i++)
@@ -605,8 +613,6 @@ void stepForward(bool** &board, size_t &rows, size_t &cols)
 	}
 
 	deleteBoard(board, rows);
-
-	removeEmptyCorners(newBoard,rows,cols);
 
 	board = newBoard;
 }
@@ -659,6 +665,7 @@ void saveBoard(bool** &board, size_t &rows, size_t &cols)
 	const unsigned MAX_SIZE = 100;
 	char input[MAX_SIZE];
 
+	cout << "> ";
 	cin.getline(input, MAX_SIZE);
 
 	insertInFileNamesFile(input);
@@ -678,10 +685,10 @@ void saveBoard(bool** &board, size_t &rows, size_t &cols)
 
 	write.close();
 
-	cout << "ok\n";
+	cout << "\nFile saved.\n\n";
 }
 
-void runGameLoop(bool** board, size_t rows, size_t cols)
+void runGameLoop(bool** &board, size_t &rows, size_t &cols)
 {
 	bool exit = false;
 	while (!exit)
@@ -696,13 +703,13 @@ void runGameLoop(bool** board, size_t rows, size_t cols)
 
 		switch (input)
 		{
-		case 1: stepForward(board, rows, cols); break;
-		case 2: setSizeBoard(board, rows, cols); break;
-		case 3: toggleCell(board, rows, cols); break;
-		case 4: clearBoard(board, rows, cols); break;
-		case 5: randomizeBoard(board, rows, cols); break;
-		case 6: saveBoard(board, rows, cols); break;
-		case 7: exit = true; break;
+			case 1: stepForward(board, rows, cols); break;
+			case 2: setSizeBoard(board, rows, cols); break;
+			case 3: toggleCell(board, rows, cols); break;
+			case 4: clearBoard(board, rows, cols); break;
+			case 5: randomizeBoard(board, rows, cols); break;
+			case 6: saveBoard(board, rows, cols); break;
+			case 7: exit = true; break;
 			default: cout << "Invalid input\n\n\n"; break;
 		}
 	}
@@ -714,7 +721,6 @@ void newGame()
 	bool** board = createEmptyBoard(rows, cols);
 
 	runGameLoop(board, rows, cols);
-
 	deleteBoard(board, rows);
 }
 
@@ -734,6 +740,7 @@ bool loadBoard(bool**& board, size_t& rows, size_t& cols)
 	const unsigned MAX_SIZE = 100;
 	char input[MAX_SIZE];
 
+	cout << "> ";
 	cin.getline(input, MAX_SIZE);
 
 	if (!existsInFileNamesFile(input)) return false;
@@ -762,6 +769,7 @@ void load()
 
 	if (loadBoard(board, rows, cols))
 		runGameLoop(board, rows, cols);
+	else cout << "\nFile does not exist.\n\n";
 }
 
 void start()
