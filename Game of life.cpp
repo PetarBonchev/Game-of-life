@@ -1,3 +1,18 @@
+/**
+*
+* Solution to course project # 2
+* Introduction to programming course
+* Faculty of Mathematics and Informatics of Sofia University
+* Winter semester 2023/2024
+*
+* @author Petar Bonchev
+* @idnumber 7MI0600322
+* @compiler VC
+*
+* Game of life project solution
+*
+*/
+
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
@@ -40,20 +55,18 @@ unsigned myStrlen(const char* str)
 int myStrcmp(const char* first, const char* second)
 {
 	if (!first || !second)
-		return 0; //some error value
+		return 0; 
 
-	//we skip the common prefix, but not the terminating zero!
-	while ((*first) && (*second) && ((*first) == (*second))) //acutally the (*second) check can be missed here.
+	while ((*first) && (*second) && ((*first) == (*second)))
 	{
 		first++;
 		second++;
 	}
 
 	return (*first - *second);
-
 }
 
-double absolute(double x)
+double absolute(const double x)
 {
 	if (x < 0)return -x;
 	return x;
@@ -83,7 +96,7 @@ int convertStrToUnsigned(const char* str)
 	return result;
 }
 
-void calculateChance(double prob, int& posibility, int& all)
+void calculateChance(double prob, unsigned& posibility, unsigned& all)
 {
 	if (prob <= 0)
 	{
@@ -114,7 +127,21 @@ void calculateChance(double prob, int& posibility, int& all)
 	}
 }
 
-bool nInRow(bool** board, size_t rows, size_t cols, int startX, int startY, int moveX, int moveY, bool value, unsigned count)
+char* boolArrToString(bool* arr, const size_t size)
+{
+	char* res = new char[size + 1];
+
+	for (unsigned i = 0;i < size;i++)
+	{
+		res[i] = arr[i] ? '1' : '0';
+	}
+
+	res[size] = '\0';
+
+	return res;
+}
+
+bool nInRow(bool** board, const size_t rows, const size_t cols, int startX, int startY, const int moveX, const int moveY, const bool value, const unsigned count)
 {
 	if (startX < 0 || rows <= startX || startY < 0 || cols <= startY) return false;
 
@@ -130,6 +157,136 @@ bool nInRow(bool** board, size_t rows, size_t cols, int startX, int startY, int 
 	}
 
 	return false;
+}
+
+bool existsInFileNamesFile(const char* name)
+{
+	const unsigned MAX_SIZE = 100;
+	ifstream read(NAMES_FILE);
+
+	while (read)
+	{
+		char line[MAX_SIZE];
+		read.getline(line, MAX_SIZE);
+
+		if (myStrcmp(line, name) == 0) return true;
+	}
+
+	read.close();
+
+	return false;
+}
+
+void setBoolArrayByString(bool* arr, size_t size, const char* str)
+{
+	if (!str) return;
+
+	for (unsigned i = 0;i < size;i++)
+	{
+		if (str[i] == '0') arr[i] = false;
+		else arr[i] = true;
+	}
+}
+
+void insertInFileNamesFile(const char* name)
+{
+	if (existsInFileNamesFile(name)) return;
+
+	ofstream write(NAMES_FILE, ios::app);
+
+	write << name << endl;
+
+	write.close();
+}
+
+int inputNatural(const unsigned maxInput)
+{
+	const unsigned MAX_SIZE = 100;
+	char input[MAX_SIZE];
+
+	cin.getline(input, MAX_SIZE);
+
+	unsigned uInput = convertStrToUnsigned(input);
+	if (uInput == 0 || maxInput < uInput) return -1;
+
+	return uInput;
+}
+
+int inputWholeNumber(const int minNumber, const int maxNumber, bool& valid)
+{
+	const unsigned MAX_SIZE = 100;
+	char input[MAX_SIZE];
+
+	cin.getline(input, MAX_SIZE);
+
+	bool negative = false;
+	int iInput = 0;
+	if (input[0] == '-')
+	{
+		negative = true;
+		iInput = convertStrToUnsigned(input + 1);
+	}
+	else iInput = convertStrToUnsigned(input);
+
+	if (iInput == -1 || iInput < minNumber || maxNumber < iInput)
+	{
+		valid = false;
+		return 0;
+	}
+
+	valid = true;
+
+	if (negative) iInput = -iInput;
+
+	return iInput;
+}
+
+double inputPositiveDouble(const double maxNumber)
+{
+	const unsigned MAX_SIZE = 100;
+	char input[MAX_SIZE];
+
+	cin.getline(input, MAX_SIZE);
+
+	unsigned len = myStrlen(input);
+	bool pointPassed = false;
+	double res = 0;
+	double multiplyer = 1;
+
+	for (unsigned i = 0;i < len;i++)
+	{
+		int digit = convertCharToDigit(input[i]);
+		if (digit != -1)
+		{
+			if (!pointPassed)
+			{
+				res *= 10;
+				res += digit;
+			}
+			else
+			{
+				multiplyer /= 10;
+				res += multiplyer * digit;
+			}
+		}
+		else if (input[i] == '.' && !pointPassed)
+		{
+			pointPassed = true;
+		}
+		else return -1;
+	}
+
+	if (res > maxNumber) return -1;
+
+	return res;
+}
+
+void randomizeBoolArray(bool* arr, const size_t size, const unsigned prob, const unsigned one)
+{
+	for (unsigned i = 0;i < size;i++)
+	{
+		arr[i] = (rand() % one < prob);
+	}
 }
 
 void printSymbols(const unsigned size, const char symbol)
@@ -259,88 +416,6 @@ void printGameBoard(bool** arr, const unsigned n, const unsigned m)
 	cout << endl;
 }
 
-int inputNatural(const unsigned maxInput)
-{
-	const unsigned MAX_SIZE = 100;
-	char input[MAX_SIZE];
-
-	cin.getline(input, MAX_SIZE);
-
-	unsigned uInput = convertStrToUnsigned(input);
-	if (uInput == 0 || maxInput < uInput) return -1;
-
-	return uInput;
-}
-
-int inputWholeNumber(const int minNumber, const int maxNumber, bool& valid)
-{
-	const unsigned MAX_SIZE = 100;
-	char input[MAX_SIZE];
-
-	cin.getline(input, MAX_SIZE);
-
-	bool negative = false;
-	int iInput = 0;
-	if (input[0] == '-')
-	{
-		negative = true;
-		iInput = convertStrToUnsigned(input + 1);
-	}
-	else iInput = convertStrToUnsigned(input);
-
-	if (iInput == -1 || iInput < minNumber || maxNumber < iInput)
-	{
-		valid = false;
-		return 0;
-	}
-
-	valid = true;
-
-	if (negative) iInput = -iInput;
-
-	return iInput;
-}
-
-double inputPositiveDouble(const double maxNumber)
-{
-	const unsigned MAX_SIZE = 100;
-	char input[MAX_SIZE];
-
-	cin.getline(input, MAX_SIZE);
-
-	unsigned len = myStrlen(input);
-	bool pointPassed = false;
-	double res = 0;
-	double multiplyer = 1;
-
-	for (unsigned i = 0;i < len;i++)
-	{
-		int digit = convertCharToDigit(input[i]);
-		if (digit != -1)
-		{
-			if (!pointPassed)
-			{
-				res *= 10;
-				res += digit;
-			}
-			else
-			{
-				multiplyer /= 10;
-				res += multiplyer * digit;
-			}
-		}
-		else if (input[i] == '.' && !pointPassed)
-		{
-			pointPassed = true;
-		}
-		else return -1;
-	}
-
-	if (res > maxNumber) return -1;
-
-	return res;
-}
-
 void fillArray(bool* arr, const size_t size, bool value)
 {
 	for (unsigned i = 0;i < size;i++)
@@ -356,15 +431,6 @@ bool** createEmptyBoard(const size_t rows, const size_t cols)
 		fillArray(board[i], cols, false);
 	}
 	return board;
-}
-
-void deleteBoard(bool** board, const size_t rows)
-{
-	for (int i = 0;i < rows;i++)
-	{
-		delete[] board[i];
-	}
-	delete[] board;
 }
 
 void copyRow(bool* rowTo, const size_t sizeTo, bool* rowFrom, const size_t sizeFrom, unsigned pasteFromPosition)
@@ -385,6 +451,15 @@ void copyPartOfRow(bool* rowTo, const size_t toSize,bool* rowFrom,const size_t f
 	{
 		rowTo[i] = rowFrom[i + start];
 	}
+}
+
+void deleteBoard(bool** board, const size_t rows)
+{
+	for (int i = 0;i < rows;i++)
+	{
+		delete[] board[i];
+	}
+	delete[] board;
 }
 
 bool expandBoard(bool**& board, size_t& rows, size_t& cols, const size_t addRowsBeg, const size_t addRowsEnd, const size_t addColsBeg, const size_t addColsEnd)
@@ -523,14 +598,6 @@ void clearBoard(bool** board, const size_t rows, const size_t cols)
 	}
 }
 
-void randomizeBoolArray(bool* arr, const size_t size, int prob, int one)
-{
-	for (unsigned i = 0;i < size;i++)
-	{
-		arr[i] = (rand() % one < prob);
-	}
-}
-
 void randomizeBoard(bool** board, const size_t rows, const size_t cols)
 {
 	cout << "> ";
@@ -542,7 +609,7 @@ void randomizeBoard(bool** board, const size_t rows, const size_t cols)
 		return;
 	}
 
-	int prob = 0, one = 1;
+	unsigned prob = 0, one = 1;
 
 	calculateChance(probability, prob, one);
 
@@ -576,7 +643,7 @@ unsigned getAliveCountAround(bool** board, const size_t rows, const size_t cols,
 	return ans;
 }
 
-void stepForwardRow(bool**& board, size_t rows, size_t cols, const unsigned row,bool** newBoard)
+void stepForwardRow(bool**& board, const size_t rows, const size_t cols, const unsigned row,bool** newBoard)
 {
 	for (unsigned j = 0;j < cols;j++)
 	{
@@ -617,49 +684,6 @@ void stepForward(bool** &board, size_t &rows, size_t &cols)
 	board = newBoard;
 }
 
-char* boolArrToString(bool* arr, const size_t size)
-{
-	char* res = new char[size + 1];
-
-	for (unsigned i = 0;i < size;i++)
-	{
-		res[i] = arr[i] ? '1' : '0';
-	}
-
-	res[size] = '\0';
-
-	return res;
-}
-
-bool existsInFileNamesFile(const char* name)
-{
-	const unsigned MAX_SIZE = 100;
-	ifstream read(NAMES_FILE);
-
-	while (read)
-	{
-		char line[MAX_SIZE];
-		read.getline(line, MAX_SIZE);
-
-		if (myStrcmp(line, name) == 0) return true;
-	}
-
-	read.close();
-
-	return false;
-}
-
-void insertInFileNamesFile(const char* name)
-{
-	if (existsInFileNamesFile(name)) return;
-
-	ofstream write(NAMES_FILE, ios::app);
-
-	write << name << endl;
-
-	write.close();
-}
-
 void saveBoard(bool** &board, size_t &rows, size_t &cols)
 {
 	const unsigned MAX_SIZE = 100;
@@ -667,6 +691,12 @@ void saveBoard(bool** &board, size_t &rows, size_t &cols)
 
 	cout << "> ";
 	cin.getline(input, MAX_SIZE);
+
+	if (myStrcmp(input, NAMES_FILE) == 0)
+	{
+		cout << "\nThis name is not available\n\n";
+		return;
+	}
 
 	insertInFileNamesFile(input);
 
@@ -722,17 +752,6 @@ void newGame()
 
 	runGameLoop(board, rows, cols);
 	deleteBoard(board, rows);
-}
-
-void setBoolArrayByString(bool* arr, size_t size, char* str)
-{
-	if (!str) return;
-
-	for (unsigned i = 0;i < size;i++)
-	{
-		if (str[i] == '0') arr[i] = false;
-		else arr[i] = true;
-	}
 }
 
 bool loadBoard(bool**& board, size_t& rows, size_t& cols)
